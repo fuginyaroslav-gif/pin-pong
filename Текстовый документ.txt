@@ -1,0 +1,86 @@
+import pygame
+import sys
+
+# Инициализация Pygame
+pygame.init()
+
+# Константы
+WIDTH, HEIGHT = 800, 600
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+PADDLE_WIDTH, PADDLE_HEIGHT = 10, 100
+BALL_SIZE = 20
+FPS = 60
+
+# Создаем окно
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Пин-понг")
+
+# Шрифты
+font = pygame.font.SysFont(None, 36)
+
+# Повороты для ракеток
+p1_y = p2_y = HEIGHT // 2 - PADDLE_HEIGHT // 2
+
+# Координаты мяча
+ball_x, ball_y = WIDTH // 2, HEIGHT // 2
+ball_dx, ball_dy = 5, 5
+
+clock = pygame.time.Clock()
+
+# Основной цикл игры
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+
+    # Обработка клавиш
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_w] and p1_y > 0:
+        p1_y -= 5
+    if keys[pygame.K_s] and p1_y < HEIGHT - PADDLE_HEIGHT:
+        p1_y += 5
+    if keys[pygame.K_UP] and p2_y > 0:
+        p2_y -= 5
+    if keys[pygame.K_DOWN] and p2_y < HEIGHT - PADDLE_HEIGHT:
+        p2_y += 5
+
+    # Обновление положения мяча
+    ball_x += ball_dx
+    ball_y += ball_dy
+
+    # Отскок от верхней и нижней границы
+    if ball_y <= 0 or ball_y >= HEIGHT - BALL_SIZE:
+        ball_dy *= -1
+
+    # Отскок от ракеток
+    # Левая ракетка
+    if (ball_x <= PADDLE_WIDTH and
+        p1_y < ball_y < p1_y + PADDLE_HEIGHT):
+        ball_dx *= -1
+
+    # Правая ракетка
+    if (ball_x >= WIDTH - PADDLE_WIDTH - BALL_SIZE and
+        p2_y < ball_y < p2_y + PADDLE_HEIGHT):
+        ball_dx *= -1
+
+    # Очки или сброс мяча, если мяч ушел за границу
+    if ball_x < 0 or ball_x > WIDTH:
+        ball_x, ball_y = WIDTH // 2, HEIGHT // 2
+        ball_dx *= -1
+
+    # Рисуем все объекты
+    screen.fill(BLACK)
+    # Ракетки
+    pygame.draw.rect(screen, WHITE, (0, p1_y, PADDLE_WIDTH, PADDLE_HEIGHT))
+    pygame.draw.rect(screen, WHITE, (WIDTH - PADDLE_WIDTH, p2_y, PADDLE_WIDTH, PADDLE_HEIGHT))
+    # Мяч
+    pygame.draw.ellipse(screen, WHITE, (ball_x, ball_y, BALL_SIZE, BALL_SIZE))
+    # Счет
+    score_text = font.render("П1: {}  П2: {}".format(
+        (ball_x < 0), (ball_x > WIDTH)), True, WHITE)
+    screen.blit(score_text, (10, 10))
+
+    pygame.display.flip()
+    clock.tick(FPS)
